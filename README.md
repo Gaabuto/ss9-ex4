@@ -1,33 +1,64 @@
-# Session 09 – Bài 4
+# Bài 4: Lưu trữ dữ liệu đơn giản với Docker Volume
 
-```console
-<a href="https://nginx.org/">nginx.org</a>.<br/>
-To engage with the community please visit
-<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
-For enterprise grade support, professional services, additional
-security features and capabilities please refer to
-<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+## 1. Mục tiêu
 
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-root@azvps-tm7f1n6r4:~# docker stop my-web && docker rm my-web
-my-web
-my-web
-root@azvps-tm7f1n6r4:~# docker volume create easy-volume
-easy-volume
-root@azvps-tm7f1n6r4:~# docker volume ls
-DRIVER    VOLUME NAME
-local     easy-volume
-root@azvps-tm7f1n6r4:~# docker run --rm -v easy-volume:/data alpine sh -c "echo 'Luu tru du lieu Docker' > /data/test.txt"
-Unable to find image 'alpine:latest' locally
-latest: Pulling from library/alpine
-e2de96513ba9: Already exists
-6d0606d1815c: Download complete
-797dd00a0fc7: Download complete
-Digest: sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
-Status: Downloaded newer image for alpine:latest
-root@azvps-tm7f1n6r4:~# docker run --rm -v easy-volume:/data alpine cat /data/test.txt
-Luu tru du lieu Docker
-root@azvps-tm7f1n6r4:~#
+* Tạo Named Volume có tên `easy-volume`.
+* Ghi dữ liệu vào Volume bằng container Alpine.
+* Sử dụng container Alpine thứ hai để đọc lại dữ liệu.
+* Kiểm tra dữ liệu vẫn tồn tại sau khi container đầu tiên kết thúc.
+
+## 2. Tạo Docker Volume
+
+Chạy lệnh:
+
+```bash
+docker volume create easy-volume
 ```
+
+Kiểm tra danh sách Volume:
+
+```bash
+docker volume ls
+```
+
+Kết quả mong đợi: xuất hiện Volume có tên `easy-volume`.
+
+## 3. Ghi dữ liệu vào Volume
+
+Chạy container Alpine để ghi nội dung vào tệp `/data/test.txt`:
+
+```bash
+docker run --rm -v easy-volume:/data alpine sh -c "echo 'Luu tru du lieu Docker' > /data/test.txt"
+```
+
+Giải thích:
+
+* `--rm`: Tự động xóa container sau khi lệnh hoàn thành.
+* `-v easy-volume:/data`: Gắn Volume `easy-volume` vào thư mục `/data` trong container.
+* `alpine`: Sử dụng image Alpine Linux nhẹ.
+* `sh -c`: Thực thi lệnh shell bên trong container.
+* `echo`: Ghi nội dung vào tệp `test.txt`.
+
+Sau khi lệnh hoàn thành, container đầu tiên sẽ kết thúc và bị xóa, nhưng dữ liệu trong Named Volume vẫn được giữ lại.
+
+## 4. Đọc lại dữ liệu từ Volume
+
+Sử dụng một container Alpine khác để đọc tệp đã lưu:
+
+```bash
+docker run --rm -v easy-volume:/data alpine cat /data/test.txt
+```
+
+Kết quả mong đợi:
+
+```text
+Luu tru du lieu Docker
+```
+
+Kết quả cho thấy dữ liệu vẫn tồn tại mặc dù container dùng để ghi dữ liệu đã kết thúc và bị xóa.
+
+## 5. Kết luận
+
+Đã tạo thành công Named Volume `easy-volume`, ghi dữ liệu vào Volume bằng một container Alpine và đọc lại dữ liệu bằng một container khác.
+
+Docker Volume giúp lưu trữ dữ liệu độc lập với vòng đời của container, do đó dữ liệu vẫn tồn tại sau khi container bị dừng hoặc xóa.
